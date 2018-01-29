@@ -25,8 +25,10 @@ SECRET_KEY = 'b9!1_l#$-k&b1p*a(onhld075r1yq!ls&wjpgpuelk08)_0itp'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.121']
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -55,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'glaucoma.urls'
@@ -84,7 +87,7 @@ WSGI_APPLICATION = 'glaucoma.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'glaucoma_1',
+        'NAME': 'glaucoma',
         'USER': 'jianping',
         'HOST': 'localhost',
         'PASSWORD': 'nankai123456',

@@ -1,0 +1,11 @@
+django===1.11
+pillow
+psycopg2
+graphene
+graphene_django
+numpy
+django-filter
+django-cors-headers
+djangorestframework
+dynamic-rest
+django_extensions
