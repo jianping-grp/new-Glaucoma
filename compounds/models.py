@@ -47,6 +47,7 @@ class Drug(models.Model):
 
     drug_name = models.CharField(max_length=1024, null=True, blank=True)
     drug_state = models.CharField(max_length=1024, null=True, blank=True)
+    drug_state_bool = models.IntegerField(null=True, blank=True)
     cas = models.CharField(max_length=1024, blank=True, null=True)
     IUPAC = models.CharField(max_length=2048, blank=True, null=True)
     drugbank_id = models.CharField(max_length=1024, null=True, blank=True)
