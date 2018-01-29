@@ -148,7 +148,7 @@ class ChEMBL_small_molecule_all_infoViewSet(viewsets.DynamicModelViewSet):
 @permission_classes([permissions.AllowAny])
 def target_pred(request):
     smiles = str(request.data['smiles'])
-    pred_data = sea.pred2(smiles, TARGET_LIST)
+    pred_data = sea.pred2(smiles)
     print pred_data
     return Response(pred_data)
 

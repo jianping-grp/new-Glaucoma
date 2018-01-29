@@ -1,13 +1,104 @@
 __author__ = 'baiqing'
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from rdkit.DataStructs import cDataStructs, TanimotoSimilarity
+from rdkit.DataStructs import TanimotoSimilarity
 import os
 import math
 import cPickle
 from glaucoma import settings
-TARGET_FOLDER_BASE = os.path.join(settings.BASE_DIR, 'target-pkl')
 
+TARGET_FOLDER_BASE = os.path.join(settings.BASE_DIR, 'target-pkl')
+TARGET_LIST = ['CHEMBL1827',
+               'CHEMBL205',
+               'CHEMBL2034',
+               'CHEMBL210',
+               'CHEMBL211',
+               'CHEMBL213',
+               'CHEMBL214',
+               'CHEMBL1867',
+               'CHEMBL216',
+               'CHEMBL217',
+               'CHEMBL1951',
+               'CHEMBL2056',
+               'CHEMBL220',
+               'CHEMBL221',
+               'CHEMBL222',
+               'CHEMBL223',
+               'CHEMBL224',
+               'CHEMBL225',
+               'CHEMBL226',
+               'CHEMBL229',
+               'CHEMBL230',
+               'CHEMBL232',
+               'CHEMBL1987',
+               'CHEMBL1881',
+               'CHEMBL2015',
+               'CHEMBL1940',
+               'CHEMBL241',
+               'CHEMBL1783',
+               'CHEMBL1821',
+               'CHEMBL2035',
+               'CHEMBL1942',
+               'CHEMBL1916',
+               'CHEMBL245',
+               'CHEMBL1904',
+               'CHEMBL246',
+               'CHEMBL1833',
+               'CHEMBL1900',
+               'CHEMBL1785',
+               'CHEMBL252',
+               'CHEMBL251',
+               'CHEMBL1836',
+               'CHEMBL254',
+               'CHEMBL256',
+               'CHEMBL4716',
+               'CHEMBL2885',
+               'CHEMBL3421',
+               'CHEMBL3025',
+               'CHEMBL4884',
+               'CHEMBL261',
+               'CHEMBL3710',
+               'CHEMBL1914',
+               'CHEMBL4425',
+               'CHEMBL2652',
+               'CHEMBL275',
+               'CHEMBL3231',
+               'CHEMBL3805',
+               'CHEMBL2609',
+               'CHEMBL3969',
+               'CHEMBL4789',
+               'CHEMBL2326',
+               'CHEMBL3510',
+               'CHEMBL2973',
+               'CHEMBL4619',
+               'CHEMBL286',
+               'CHEMBL288',
+               'CHEMBL3977',
+               'CHEMBL290',
+               'CHEMBL291',
+               'CHEMBL1980',
+               'CHEMBL4235',
+               'CHEMBL3878',
+               'CHEMBL3119',
+               'CHEMBL3012',
+               'CHEMBL3242',
+               'CHEMBL2717',
+               'CHEMBL3729',
+               'CHEMBL3912',
+               'CHEMBL3594',
+               'CHEMBL2072',
+               'CHEMBL4296',
+               'CHEMBL4187',
+               'CHEMBL5163',
+               'CHEMBL5451',
+               'CHEMBL3535',
+               'CHEMBL3746',
+               'CHEMBL3836',
+               'CHEMBL4640',
+               'CHEMBL4408',
+               'CHEMBL4409',
+               'CHEMBL4267',
+               'CHEMBL5932']
 FP_PARAM = {
     'topological_hashed': {
         "mean": 0.000026936641120031898,
@@ -39,6 +130,7 @@ FP_PARAM = {
     }
 }
 
+
 def raw_score(target_mol_pkl, mol_fp, cutoff):
     # try:
     sim_list = list()
@@ -63,7 +155,8 @@ def p_value(z):
     else:
         return 1 - math.exp(x)
 
-def pred2(smiles, target_list):
+
+def pred2(smiles, target_list=TARGET_LIST):
     result = list()
     try:
         mol = Chem.MolFromSmiles(smiles)
@@ -77,7 +170,7 @@ def pred2(smiles, target_list):
     #     fp_result = dict()
     fp_dict = dict()
     for fp_name, fp_param in FP_PARAM.iteritems():
-       fp_dict[fp_name] = fp_param['fp_func'](mol)
+        fp_dict[fp_name] = fp_param['fp_func'](mol)
 
     for idx, chembl_id in enumerate(target_list):
         # print idx
@@ -96,6 +189,7 @@ def pred2(smiles, target_list):
             result.append(target_result)
     return result
 
+
 def pred(smiles, target_list):
     result = dict()
     try:
@@ -109,7 +203,7 @@ def pred(smiles, target_list):
         print fp_name
         fp_result = dict()
         for idx, chembl_id in enumerate(target_list):
-            #print idx
+            # print idx
             target_mol_pkl = cPickle.load(open(os.path.join(TARGET_FOLDER_BASE, fp_name, chembl_id), 'r'))
             rs = raw_score(target_mol_pkl, mol_fp, fp_parm['tc'])
             if rs:
@@ -121,14 +215,19 @@ def pred(smiles, target_list):
         result[fp_name] = fp_result
     return result
 
+
 def _test():
-    #target_list = os.listdir(os.path.join(TARGET_FOLDER_BASE, 'maccs'))[:100]
-    TARGET_LIST = ['CHEMBL2034',
-                   'CHEMBL4267',
-                   'CHEMBL2717',
-                   'CHEMBL1987',
-                   'CHEMBL5932',
-                   'CHEMBL286',
-                   'CHEMBL3119']
+    # target_list = os.listdir(os.path.join(TARGET_FOLDER_BASE, 'maccs'))[:100]
+    # TARGET_LIST = ['CHEMBL2034',
+    #                'CHEMBL4267',
+    #                'CHEMBL2717',
+    #                'CHEMBL1987',
+    #                'CHEMBL5932',
+    #                'CHEMBL286',
+    #                'CHEMBL3119']
     smiles = 'CC1CCCN(C1C)C(=O)c2csc(Nc3ccc(C)cc3)n2'
     print pred2(smiles, TARGET_LIST)
+
+
+# if __name__ == '__main__':
+#     _test()
