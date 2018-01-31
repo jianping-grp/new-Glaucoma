@@ -99,6 +99,8 @@ class Drug(models.Model):
 class Target(models.Model):
     entry_name = models.CharField(max_length=200, blank=True, null=True)
     uniprot_accession = models.CharField(max_length=200, blank=True, null=True)
+    uniprot_url = models.URLField(max_length=1024, blank=True, null=True)
+
     gene = models.CharField(max_length=200, blank=True, null=True)
     protein_description = models.CharField(max_length=2048, blank=True, null=True)
     keggid = models.CharField(max_length=200, blank=True, null=True)
@@ -139,6 +141,8 @@ class Pathway(models.Model):
 
 
 class ChEMBL_small_molecule_all_info(models.Model):
+    objects = CompoundManager()
+
     molecule_chembl_id = models.CharField(max_length=200, null=True, blank=True)
     molecule_chembl_id_url = models.URLField(max_length=1024, blank=True, null=True)
     molecule_smile = models.CharField(max_length=2048, null=True, blank=True)
@@ -162,6 +166,20 @@ class ChEMBL_small_molecule_all_info(models.Model):
     doc_pubmed_id = models.CharField(max_length=50, null=True, blank=True)
     doc_pubmed_id_url = models.URLField(max_length=1024, null=True, blank=True)
 
+    ### figureprint
+    formula = models.CharField(max_length=1024, blank=True, null=True)
+
+    mol = MolField(null=True, blank=True)
+    mol_block = models.TextField(blank=True)
+    bfp = BfpField(blank=True, null=True)
+    mol_weight = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+
+    alogp = models.DecimalField(max_digits=9, decimal_places=2, verbose_name=_('Calculated AlogP'), null=True)
+    hba = models.SmallIntegerField(verbose_name=_('Number of hydrogen bond acceptor'), blank=True, null=True)
+    hbd = models.SmallIntegerField(verbose_name=_('Number of hydrogen bond donor'), blank=True, null=True)
+    psa = models.DecimalField(max_digits=9, decimal_places=2, verbose_name=_('Polar surface area'), blank=True,
+                              null=True)
+    rtb = models.SmallIntegerField(verbose_name=_('Number of rotatable bonds'), blank=True, null=True)
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -170,6 +188,27 @@ class ChEMBL_small_molecule_all_info(models.Model):
         self.doc_chembl_id_url = 'https://www.ebi.ac.uk/chembl/doc/inspect/{}'.format(self.doc_chembl_id)
         self.doc_pubmed_id_url = 'https://www.ncbi.nlm.nih.gov/pubmed/?term={}'.format(self.doc_pubmed_id)
         super(ChEMBL_small_molecule_all_info, self).save()
+
+        smiles = self.molecule_smile
+
+        if smiles:
+            try:
+                self.mol = Chem.MolFromSmiles(smiles)
+                self.mol_block = Chem.MolToMolBlock(self.mol)
+                self.mol_weight = Descriptors.ExactMolWt(self.mol)
+                self.alogp = MolLogP(self.mol)
+                self.hba = NumHAcceptors(self.mol)
+                self.hbd = NumHDonors(self.mol)
+                self.psa = Chem.MolSurf.TPSA(self.mol)
+                self.rtb = NumRotatableBonds(self.mol)
+                super(ChEMBL_small_molecule_all_info, self).save()
+                self.formula = Chem.rdMolDescriptors.CalcMolFormula(self.mol)
+                self.bfp = MORGANBV_FP(Value(smiles))
+            except (ValueError, TypeError):
+                print('Error when storing mol object')
+                pass
+        super(ChEMBL_small_molecule_all_info, self).save()
+
 
 class Feedback(models.Model):
     username = models.CharField(max_length=256)
