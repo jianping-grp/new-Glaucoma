@@ -113,7 +113,7 @@ class Target(models.Model):
     drugbankids = models.ManyToManyField('DrugBankID', blank=True)
     #chembl_small_molecules = models.ManyToManyField('ChEMBLSmallMolecule', blank=True)
     chembl_small_molecules_all_infos = models.ManyToManyField('ChEMBL_small_molecule_all_info', blank=True)
-
+    chembl_small_molecules_structure_info = models.ManyToManyField('ChEMBL_small_molecule', blank=True)
 
     def __str__(self):
         return self.entry_name
@@ -209,6 +209,55 @@ class ChEMBL_small_molecule_all_info(models.Model):
                 pass
         super(ChEMBL_small_molecule_all_info, self).save()
 
+@python_2_unicode_compatible
+class ChEMBL_small_molecule(models.Model):
+    objects = CompoundManager()
+
+    molecule_chembl_id = models.CharField(max_length=200, null=True, blank=True)
+    molecule_chembl_id_url = models.URLField(max_length=1024, blank=True, null=True)
+    molecule_smile = models.CharField(max_length=2048, null=True, blank=True)
+
+    formula = models.CharField(max_length=1024, blank=True, null=True)
+
+    mol = MolField(null=True, blank=True)
+    mol_block = models.TextField(blank=True)
+    bfp = BfpField(blank=True, null=True)
+    mol_weight = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+
+    alogp = models.DecimalField(max_digits=9, decimal_places=2, verbose_name=_('Calculated AlogP'), null=True)
+    hba = models.SmallIntegerField(verbose_name=_('Number of hydrogen bond acceptor'), blank=True, null=True)
+    hbd = models.SmallIntegerField(verbose_name=_('Number of hydrogen bond donor'), blank=True, null=True)
+    psa = models.DecimalField(max_digits=9, decimal_places=2, verbose_name=_('Polar surface area'), blank=True,
+                              null=True)
+    rtb = models.SmallIntegerField(verbose_name=_('Number of rotatable bonds'), blank=True, null=True)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        self.molecule_chembl_id_url = 'https://www.ebi.ac.uk/chembl/compound/inspect/{}'.format(self.molecule_chembl_id)
+        super(ChEMBL_small_molecule, self).save()
+
+        smiles = self.molecule_smile
+
+        if smiles:
+            try:
+                self.mol = Chem.MolFromSmiles(smiles)
+                self.mol_block = Chem.MolToMolBlock(self.mol)
+                self.mol_weight = Descriptors.ExactMolWt(self.mol)
+                self.alogp = MolLogP(self.mol)
+                self.hba = NumHAcceptors(self.mol)
+                self.hbd = NumHDonors(self.mol)
+                self.psa = Chem.MolSurf.TPSA(self.mol)
+                self.rtb = NumRotatableBonds(self.mol)
+                super(ChEMBL_small_molecule, self).save()
+                self.formula = Chem.rdMolDescriptors.CalcMolFormula(self.mol)
+                self.bfp = MORGANBV_FP(Value(smiles))
+            except (ValueError, TypeError):
+                print('Error when storing mol object')
+                pass
+        super(ChEMBL_small_molecule, self).save()
+
+    def __str__(self):
+        return self.molecule_chembl_id
 
 class Feedback(models.Model):
     username = models.CharField(max_length=256)

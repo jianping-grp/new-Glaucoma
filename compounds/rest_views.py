@@ -173,6 +173,38 @@ class ChEMBL_small_molecule_all_infoViewSet(viewsets.DynamicModelViewSet):
         return Response(result)
 
 
+class ChEMBL_small_moleculeViewSet(viewsets.DynamicModelViewSet):
+    queryset = ChEMBL_small_molecule.objects.all()
+    serializer_class = serializers.ChEMBL_small_molecule_Serializer
+
+    @list_route(methods=['POST', 'GET'], permission_classes=[permissions.AllowAny])
+    def search(self, request):
+        smiles = str(request.data['smiles'])
+        similarity = float(request.data['similarity'])
+        substructure_search = int(request.data['substructure_search'])
+        # perform substructure
+        print smiles, similarity, substructure_search
+        result = {}
+        if substructure_search == 1:
+            result = ChEMBL_small_molecule.objects.filter(mol__hassubstruct=QMOL(Value(smiles))).all()
+
+        # structure search
+        else:
+            try:
+                result = ChEMBL_small_molecule.objects.structure_search(smiles, similarity)
+            except:
+                print 'structure search error'
+
+        if result:
+            page = self.paginate_queryset(result)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(result, many=True)
+            return Response(serializer.data)
+
+        return Response(result)
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def target_pred(request):

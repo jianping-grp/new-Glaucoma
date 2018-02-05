@@ -14,7 +14,9 @@ class TargetSerializer(serializers.DynamicModelSerializer):
     drug_set = serializers.DynamicRelationField('DrugSerializer', many=True, deferred=True, embed=True)
     drugbankids = serializers.DynamicRelationField('DrugBankIDSerializer', many=True, deferred=True, embed=True)
     chembl_small_molecules_all_infos = serializers.DynamicRelationField('ChEMBL_small_molecule_all_info_Serializer', many=True, deferred=True, embed=True)
+    chembl_small_molecules_structure_info = serializers.DynamicRelationField('ChEMBL_small_molecule_Serializer', many=True, deferred=True, embed=True)
     pathway_set = serializers.DynamicRelationField('PathwaySerializer', many=True, deferred=True, embed=True)
+
 
     class Meta:
         model = models.Target
@@ -41,6 +43,13 @@ class ChEMBL_small_molecule_all_info_Serializer(serializers.DynamicModelSerializ
     class Meta:
         model = models.ChEMBL_small_molecule_all_info
         exclude = []
+
+class ChEMBL_small_molecule_Serializer(serializers.DynamicModelSerializer):
+    target_set = serializers.DynamicRelationField('TargetSerializer', many=True, deferred=True, embed=True)
+
+    class Meta:
+        model = models.ChEMBL_small_molecule
+        exclude = ['bfp', 'mol_block', 'mol']
 
 class FeedbackSerializer(serializers.DynamicModelSerializer):
     class Meta:

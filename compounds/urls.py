@@ -8,6 +8,7 @@ router.register('drugbankid', rest_views.DrugBankIDViewSet)
 router.register('pathway', rest_views.PathwayViewSet)
 router.register('target', rest_views.TargetViewSet)
 router.register('target-related-mol-chembl', rest_views.ChEMBL_small_molecule_all_infoViewSet)
+router.register('target-related-mol-structure', rest_views.ChEMBL_small_moleculeViewSet)
 
 urlpatterns = router.urls
 urlpatterns += [
