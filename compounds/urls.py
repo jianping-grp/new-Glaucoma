@@ -14,5 +14,6 @@ urlpatterns = router.urls
 urlpatterns += [
     # url(r'^', include(router.urls)),
     url(r'^target-prediction/', rest_views.target_pred),
+    url(r'^bulk-target-prediction', rest_views.bulk_target_pred_2),
     url(r'^feedback/', rest_views.FeedbackCreateView.as_view())
 ]

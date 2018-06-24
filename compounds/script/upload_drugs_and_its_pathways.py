@@ -21,31 +21,41 @@ def upload_drugs(line):
     cas = line['cas']
     cid = line['cid']
     smiles = line['smiles']
-    pathways = extract_pathway_info(line['pathway'])
+    pathways = line['pathway'].split('\n') if not isinstance(line['pathway'], float) else []
 
-
-    drug, created = Drug.objects.get_or_create(
-        drug_name=drug_name,
-        drug_state=drug_state,
-        IUPAC=iupac,
-        drugbank_id=drugbank_id,
+    drug = Drug.objects.get(
+    # drug, created = Drug.objects.get_or_create(
+    #     drug_name=drug_name,
+    #     drug_state=drug_state,
+    #     IUPAC=iupac,
+    #     drugbank_id=drugbank_id,
         cas=cas,
         cid=cid,
-        smiles=smiles
+        # smiles=smiles
     )
 
     for pathway in pathways:
-        try:
-            p, created = Pathway.objects.get_or_create(
-                pathway_name=pathway[0],
-                descripor=pathway[1]
-            )
-            p.drugs.add(drug)
-            p.save()
-        except pathway.DoesNotExist:
-            print("Can't find %s:%s in database" %(pathway[0],pathway[1]))
-        except pathway.MultipleObjectsReturned:
-            print("return multiple pathways")
+        el = pathway.split(':')
+        pathway_name = el[0].strip()
+        descriptor = el[1].strip()
+        pathway, created = Pathway.objects.get_or_create(
+            pathway_name=pathway_name,
+            descripor=descriptor
+        )
+        pathway.drugs.add(drug)
+        pathway.save()
+        # try:
+        #     # p = Pathway.objects.get(
+        #     p, created = Pathway.objects.get_or_create(
+        #         pathway_name=pathway_name,
+        #         descripor=descriptor
+        #     )
+        #     p.drugs.add(drug)
+        #     p.save()
+        # except pathway.DoesNotExist:
+        #     print("Can't find %s:%s in database" %(pathway[0],pathway[1]))
+        # except pathway.MultipleObjectsReturned:
+        #     print("return multiple pathways")
 
 if __name__ == '__main__':
     drug_file = '/home/jianping/Desktop/weiyu/process/drugs/drugs_to_glaucoma.xlsx'
@@ -53,4 +63,3 @@ if __name__ == '__main__':
     for idx, line in df.iterrows():
         print(idx)
         upload_drugs(line)
-

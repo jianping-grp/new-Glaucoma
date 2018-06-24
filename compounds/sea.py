@@ -156,7 +156,7 @@ def p_value(z):
         return 1 - math.exp(x)
 
 
-def pred2(smiles, target_list=TARGET_LIST):
+def pred2_build_in_function(smiles, target_list=TARGET_LIST):
     result = list()
     try:
         mol = Chem.MolFromSmiles(smiles)
@@ -175,6 +175,7 @@ def pred2(smiles, target_list=TARGET_LIST):
     for idx, chembl_id in enumerate(target_list):
         # print idx
         target_result = dict()
+        target_result['smiles'] = smiles
         for fp_name, fp_param in FP_PARAM.iteritems():
             mol_fp = fp_dict[fp_name]
             target_mol_pkl = cPickle.load(open(os.path.join(TARGET_FOLDER_BASE, fp_name, chembl_id), 'r'))
@@ -186,7 +187,85 @@ def pred2(smiles, target_list=TARGET_LIST):
 
         if target_result:
             target_result['chembl_id'] = chembl_id
+            target_result['smile'] = smiles
             result.append(target_result)
+    return result
+
+def pred2_all_target_list(smiles, target_list=TARGET_LIST):
+    result = list()
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+    except:
+        # todo: invalid rdkit molecule
+        print 'invalid smiles'
+        return None
+    # for fp_name, fp_parm in FP_PARAM.iteritems():
+    #     mol_fp = fp_parm['fp_func'](mol)
+    #     print fp_name
+    #     fp_result = dict()
+    fp_dict = dict()
+    for fp_name, fp_param in FP_PARAM.iteritems():
+        fp_dict[fp_name] = fp_param['fp_func'](mol)
+
+    for idx, chembl_id in enumerate(target_list):
+        # print idx
+        target_result = dict()
+        target_result['smiles'] = smiles
+        target_result['chembl_id'] = chembl_id
+        for fp_name, fp_param in FP_PARAM.iteritems():
+            mol_fp = fp_dict[fp_name]
+            target_mol_pkl = cPickle.load(open(os.path.join(TARGET_FOLDER_BASE, fp_name, chembl_id), 'r'))
+            rs = raw_score(target_mol_pkl, mol_fp, fp_param['tc'])
+            if rs:
+                zscore = z_score(rs, len(target_mol_pkl), fp_param['mean'], fp_param['sd'], fp_param['sd_exp'])
+                pvalue = p_value(zscore)
+                target_result[fp_name] = pvalue
+            else:
+                target_result[fp_name] = None
+        result.append(target_result)
+
+        # if target_result:
+        #     target_result['chembl_id'] = chembl_id
+        #     # target_result['smile'] = smiles
+        #     result.append(target_result)
+    return result
+
+def pred2_single_target(smiles, target):
+    result = list()
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+    except:
+        # todo: invalid rdkit molecule
+        print 'invalid smiles'
+        return None
+    # for fp_name, fp_parm in FP_PARAM.iteritems():
+    #     mol_fp = fp_parm['fp_func'](mol)
+    #     print fp_name
+    #     fp_result = dict()
+    fp_dict = dict()
+    for fp_name, fp_param in FP_PARAM.iteritems():
+        fp_dict[fp_name] = fp_param['fp_func'](mol)
+
+    for idx, chembl_id in enumerate([target]):
+        # print idx
+        target_result = dict()
+        target_result['smiles'] = smiles
+        target_result['chembl_id'] = chembl_id
+        for fp_name, fp_param in FP_PARAM.iteritems():
+            mol_fp = fp_dict[fp_name]
+            target_mol_pkl = cPickle.load(open(os.path.join(TARGET_FOLDER_BASE, fp_name, chembl_id), 'r'))
+            rs = raw_score(target_mol_pkl, mol_fp, fp_param['tc'])
+            if rs:
+                zscore = z_score(rs, len(target_mol_pkl), fp_param['mean'], fp_param['sd'], fp_param['sd_exp'])
+                pvalue = p_value(zscore)
+                target_result[fp_name] = pvalue
+            else:
+                target_result[fp_name] = None
+        result.append(target_result)
+        # if target_result:
+        #     target_result['chembl_id'] = chembl_id
+        #     target_result['smile'] = smiles
+        #     result.append(target_result)
     return result
 
 

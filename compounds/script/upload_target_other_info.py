@@ -20,7 +20,7 @@ def upload_target_other_info(line):
     type = line['type']
     keggid = line['keggid']
     pdbid = line['pdbid']
-    pathway_list = extract_pathway(line['pathways'])
+    pathway_list = line['pathways'].split('\n') if not isinstance(line['pathways'], float) else []
 
     target, created = Target.objects.get_or_create(
         entry_name=entry_name,
@@ -37,8 +37,11 @@ def upload_target_other_info(line):
     target.pdbid = pdbid
     target.save()
     for pathway_info in pathway_list:
+        el = pathway_info.split(':')
+        pathway_name = el[0].strip()
+        descriptor = el[1].strip()
         try:
-            p, create = Pathway.objects.get_or_create(pathway_name=pathway_info[0], descripor=pathway_info[1])
+            p, create = Pathway.objects.get_or_create(pathway_name=pathway_name, descripor=descriptor)
             p.targets.add(target)
             p.save()
         except:

@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'glaucoma.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'glaucoma_only_Approved3',
+        'NAME': 'glaucoma_6_24-backup',
         'USER': 'jianping',
         'HOST': 'localhost',
         'PASSWORD': 'nankai123456',

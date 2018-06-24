@@ -25,18 +25,61 @@ class CompoundManager(models.Manager):
 
 @python_2_unicode_compatible
 class DrugBankID(models.Model):
+    objects = CompoundManager()
+
     drugbank_id = models.CharField(max_length=200, blank=True, null=True)
     url = models.URLField(max_length=1024, blank=True, null=True)
 
+    generic_name = models.CharField(max_length=200, blank=True, null=True)
+    synonyms = models.CharField(max_length=10000, blank=True, null=True)
+    products = models.CharField(max_length=10000, blank=True, null=True)
+    jchem_iupac = models.CharField(max_length=10000, blank=True, null=True)
+
+    smiles = models.CharField(max_length=2048, null=True, blank=True)
+    formula = models.CharField(max_length=1024, blank=True, null=True)
+
+    mol = MolField(null=True, blank=True)
+    mol_block = models.TextField(blank=True)
+    bfp = BfpField(blank=True, null=True)
+    mol_file = models.FileField(upload_to='mol_files', blank=True, null=True)
+    mol_image = models.ImageField(upload_to='mol_images', blank=True, null=True)
+    mol_weight = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+
+    alogp = models.DecimalField(max_digits=9, decimal_places=2, verbose_name=_('Calculated AlogP'), null=True)
+    hba = models.SmallIntegerField(verbose_name=_('Number of hydrogen bond acceptor'), blank=True, null=True)
+    hbd = models.SmallIntegerField(verbose_name=_('Number of hydrogen bond donor'), blank=True, null=True)
+    psa = models.DecimalField(max_digits=9, decimal_places=2, verbose_name=_('Polar surface area'), blank=True,
+                              null=True)
+    rtb = models.SmallIntegerField(verbose_name=_('Number of rotatable bonds'), blank=True, null=True)
 
     def __str__(self):
         return self.drugbank_id
 
+    # def save(self, force_insert=False, force_update=False, using=None,
+    #          update_fields=None, *args, **kwargs):
+    #     self.url = 'https://www.drugbank.ca/drugs/{}'.format(self.drugbank_id)
+    #     super(DrugBankID, self).save(*args, **kwargs)
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, *args, **kwargs):
         self.url = 'https://www.drugbank.ca/drugs/{}'.format(self.drugbank_id)
+        smiles = self.smiles
+        if smiles:
+            try:
+                self.mol = Chem.MolFromSmiles(smiles)
+                self.mol_block = Chem.MolToMolBlock(self.mol)
+                self.mol_weight = Descriptors.ExactMolWt(self.mol)
+                self.alogp = MolLogP(self.mol)
+                self.hba = NumHAcceptors(self.mol)
+                self.hbd = NumHDonors(self.mol)
+                self.psa = Chem.MolSurf.TPSA(self.mol)
+                self.rtb = NumRotatableBonds(self.mol)
+                super(DrugBankID, self).save(*args, **kwargs)
+                self.formula = Chem.rdMolDescriptors.CalcMolFormula(self.mol)
+                self.bfp = MORGANBV_FP(Value(smiles))
+            except (ValueError, TypeError):
+                print('Error when storing mol object')
+                pass
         super(DrugBankID, self).save(*args, **kwargs)
-
 
 
 
@@ -115,6 +158,10 @@ class Target(models.Model):
     chembl_small_molecules_all_infos = models.ManyToManyField('ChEMBL_small_molecule_all_info', blank=True)
     chembl_small_molecules_structure_info = models.ManyToManyField('ChEMBL_small_molecule', blank=True)
 
+    compound_count = models.IntegerField(blank=True, null=True)
+    bioactivity_count = models.IntegerField(blank=True, null=True)
+    reference_count = models.IntegerField(blank=True, null=True)
+
     def __str__(self):
         return self.entry_name
     def save(self, force_insert=False, force_update=False, using=None,
@@ -130,6 +177,10 @@ class Pathway(models.Model):
     descripor = models.CharField(max_length=2048, null=True, blank=True)
     drugs = models.ManyToManyField(Drug, blank=True)
     targets = models.ManyToManyField(Target, blank=True)
+
+    drug_count = models.IntegerField(blank=True, null=True)
+    target_count = models.IntegerField(blank=True, null=True)
+
 
     def __str__(self):
         return self.pathway_name
