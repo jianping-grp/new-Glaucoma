@@ -245,6 +245,7 @@ class ChEMBL_small_moleculeViewSet(viewsets.DynamicModelViewSet):
 def target_pred(request):
     smiles = str(request.data['smiles'])
     pred_data = sea.pred2_build_in_function(smiles)
+    # pred_data = sea.pred2(smiles)
     print pred_data
     return Response(pred_data)
 
@@ -316,7 +317,7 @@ def send_prediction_result(structure_file, email_addr, prediction_result, predic
                     pred_data = sea.pred2_all_target_list(smile)
                 else:
                     pred_data = sea.pred2_single_target(smile, target=prediction_type)
-                temp_df = pd   .DataFrame(pred_data)
+                temp_df = pd.DataFrame(pred_data)
                 temp_df['index'] = [idx] * len(pred_data)
                 df = pd.concat([df, temp_df])
             else:
@@ -342,11 +343,11 @@ def send_prediction_result(structure_file, email_addr, prediction_result, predic
     #     s = Chem.MolFromMol2Block()
     #     for mol in mols:
     #         print(mol.GetNumAtoms())
-    print(df)
     df.fillna('None', inplace=True)
+    print(df.columns)
+    # df = df.reindex_axis(['index', 'smile'] + list(df.columns[:])-['index', 'smile'], axis=1)
     df = df[['index', 'smiles', 'atompair_hashed', 'maccs', 'morgan_hashed', 'topological_hashed', 'chembl_id']]
     df.to_csv(prediction_result)
-
 
     host_server = 'smtp.qq.com'
     sender_mail_addr = '1032847174@qq.com'
