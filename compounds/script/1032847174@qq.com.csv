@@ -1,0 +1,6 @@
+,smiles,prediction
+0,"CNCC(O)c1ccc(OC(=O)C(C)(C)C)c(OC(=O)C(C)(C)C)c1
+","{'topological_hashed': 0.00018017594180030905, 'chembl_id': 'CHEMBL210', 'atompair_hashed': 0.00011721981046008967, 'maccs': 0.0010352272437803567, 'morgan_hashed': 9.563590430972102e-05}"
+1,"CCNC(=O)CCC/C=C\C[C@H]1[C@@H](O)C[C@@H](O)[C@@H]1/C=C/[C@@H](O)CCc1ccccc1
+","{'topological_hashed': 3.531640969935104e-43, 'chembl_id': 'CHEMBL1987', 'morgan_hashed': 1.6676547401390112e-23, 'atompair_hashed': 4.498090788729314e-11}
+{'chembl_id': 'CHEMBL3710', 'atompair_hashed': 6.121148529869558e-05}"
